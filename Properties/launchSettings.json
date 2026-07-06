@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "DisBlox (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "DisBlox (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
