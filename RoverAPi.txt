@@ -1,0 +1,300 @@
+
+RoVer
+Manage Privacy Consent
+Sign out
+Discord
+The Dreambound
+Role Bindings
+Verification Channel
+Log Channel
+Behavior
+Roblox BansFree
+Developer API
+Server Owner Developer API
+Tip: For use of the RoVer API in your own Discord bot, see the Bot Developer API instead.
+
+New API key
+Describe what the API is being used for
+Note	Created by	Created time	
+TesterAdder	shine6132#0	11/10/2025, 6:44:01 PM	
+RoVer API Reference
+§Before you use this API
+Where it fits your use case, prefer Roblox's OAuth2 API  or Discord's API  directly. The RoVer API is appropriate when your application acts on behalf of a specific Discord server and needs to map between Discord and Roblox accounts that users have linked through RoVer.
+
+If you just need to verify a user's Roblox account inside your own app, Roblox OAuth2 is the better tool - it doesn't depend on a Discord server having RoVer installed, and the user opts in directly to your application. For general Discord profile data, Discord's API is the right source.
+
+§API Terms
+By creating a RoVer API key, you are agreeing to these terms.
+
+Any API keys created must remain in your sole ownership and be kept private with reasonable security measures.
+You may not give or sell your API keys to any entity that is not directly involved in the creation of your application.
+You may not send your API key to members of your team over chat messages or other insecure means.
+You can create as many API keys as you want, have each member create their own.
+You must take reasonable measures to store your API key in a secure place at rest
+i.e., pasting your API key into your source code is not allowed. Use a secret store or environment file instead.
+Data retrieved from our API may only be retained for a maximum of 30 days.
+This includes but is not limited to Roblox IDs, usernames, Discord usernames, IDs, and any other user information.
+Only information that is novel to your application falls under this provision.
+i.e., if you already knew the user's Roblox ID before you acquired it from the API, you are not bound by this provision for the Roblox ID portion, but still could be for Discord ID, etc.
+If your application needs information for a longer period, it should re-request the resource to "refresh" it. If the resource is gone, you should delete it from your application entirely.
+You may not use our API to "scrape" data from our system.
+Any request made against our API must originate as a result of the target user of your request interacting with your application. Probing our API for user data when the target user is not also a user of your application is prohibited.
+You are prohibited from republishing or otherwise serving data you retrieved from our API without substantially transforming the data or providing end-user value.
+For example, creating an API that in turn sends a request to our API and then returns the results is not allowed.
+Creating an API that aggregates user data and in some cases may return data retrieved from our API is also prohibited.
+If a user of RoVer or your application contacts you asking for data you collected from our API to be removed or unpublished, you must comply with their request.
+Users may contact us to request their data deletion, and we may forward these requests to you; you must also comply with these requests.
+You must comply with our dynamic rate limits. Rate limits (discussed below) return dynamic HTTP headers to inform your application when it needs to stop and wait before making more requests.
+§Rate Limits
+The RoVer API is rate-limited by Cloudflare. The current limit is 5 requests per 10-second window per API key (≈30 requests per minute, but you can't burst more than 5 at once).
+
+⚠️ All API keys for the same server or bot share the same limit.
+
+When you exceed the limit, Cloudflare responds with:
+
+HTTP 429 Too Many Requests
+A Retry-After header containing the number of seconds to wait
+If you receive a 429, stop sending requests until at least Retry-After seconds have passed. Cloudflare's limit applies before any application logic runs, so we cannot include our own structured error body or advisory headers on rate-limited responses.
+
+§Errors
+On 4xx or 5xx response codes, our API will return a standardized format for errors.
+
+The Content-Type header for application errors is always application/json;charset=UTF-8. Always check this header before JSON-decoding the response body. Some error responses originate from Cloudflare (rate limits, edge errors, etc.) rather than our application. Those have a text/html content type and a body that should not be parsed.
+
+The JSON response object will have the following keys:
+
+errorCode: The machine-readable error code associated with this error. Examples: bad_request, user_not_found, discord_rate_limit
+message: The human-readable description of this error
+detail: Potentially undefined. An object containing further machine-readable information that varies by errorCode.
+context: Potentially undefined. Human-readable message containing what our system was trying to do when the error occurred.
+§Authorization
+All requests to the RoVer API require an API key. An API key can be created by using the form at the top of this page. Server API keys are scoped to one guild, so requests to other guilds with a key created for this guild will not work. Bot API keys may be used in any server that both RoVer and your bot are in.
+
+RoVer API keys start with the string rvr2. API keys are ~68 characters long.
+
+RoVer API requests are authorized using the Bearer scheme in the Authorization  HTTP header:
+
+Authorization: Bearer rvr2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+§User opt-in
+Each verified user controls, per server, whether their linked account is visible to the public API. The default is opt-out. Users must provide consent for the server operators to have access to their Roblox account in order to receive the Verified role or have their nickname set.
+
+Consent for bots accessing their account through the RoVer API is separate and must be provided separately.
+
+In either case, the consent can be configured by clicking "Manage Privacy" on the update response or by running the /privacy command.
+
+Rather than waiting for a user to opt in on their own, your application can proactively ask for consent with the access request endpoint described below.
+
+§Endpoints
+§Base URL: https://registry.rover.link/api
+Endpoint URLs that contain a colon-prefixed parameter should be replaced with their literal counterparts before the request is made (e.g., :guildId should be replaced with 425800792679645204)
+
+§GET /guilds/:guildId/discord-to-roblox/:userId
+Fetch a Discord member's verified Roblox account. This endpoint will only return results for members of your server.
+
+Sample 200 response:
+{
+  "robloxId": 92658764,
+  "cachedUsername": "evaera",
+  "discordId": "113691352327389188",
+  "guildId": "425800792679645204"
+}
+Potential error codes (non-exhaustive):
+bad_request
+user_not_found
+discord_error
+discord_rate_limit
+§GET /guilds/:guildId/roblox-to-discord/:robloxId
+Fetch members of your Discord server that are associated with a Roblox user ID. This endpoint will only return results for members of your server.
+
+Note that multiple members may be returned: users can verify as the same Roblox account on multiple Discord accounts, so it's possible they have multiple accounts in your server.
+
+This endpoint returns an array of Discord Guild Member objects .
+
+Sample 200 response:
+{
+  "discordUsers": [
+    {
+      "avatar": null,
+      "communication_disabled_until": null,
+      "flags": 0,
+      "is_pending": false,
+      "joined_at": "2018-03-20T23:40:20.023000+00:00",
+      "nick": "eryn / evaera",
+      "pending": false,
+      "premium_since": null,
+      "roles": [
+        "425802533584240650",
+        "603045395127468042",
+        "603048177435934734",
+        "603048265356935187",
+        "425802928327229470",
+        "603048153922666556",
+        "603048114986942494"
+      ],
+      "user": {
+        "id": "113691352327389188",
+        "username": "eryn",
+        "avatar": "d416bd9b18cf8b28ddfcc3506855629a",
+        "avatar_decoration": null,
+        "discriminator": "0001",
+        "public_flags": 131712
+      },
+      "mute": false,
+      "deaf": false
+    }
+  ],
+  "robloxId": 92658764,
+  "guildId": "425800792679645204"
+}
+Potential error codes (non-exhaustive):
+bad_request
+user_not_found
+discord_error
+discord_rate_limit
+§PUT /guilds/:guildId/access-requests/:userId
+Asks a user to grant your application access to their linked Roblox account. RoVer sends the user a DM with your application's name and icon and Allow / Deny buttons. The user can deauthorize at any time from that same DM.
+
+The user must be a member of the guild in the path, but does not need to be verified - consent can exist before a user links an account. If they authorize and later verify, your application gains access automatically.
+
+This endpoint behaves differently depending on the key used:
+
+A bot API key creates server-independent consent between the user and your application.
+A server API key creates the same per-server consent as the privacy menu, and refreshes the user's roles on authorization.
+The request is idempotent. While a request is pending, calling this endpoint again will not send the user a second DM, but it will adopt the latest callbackUrl. If the user has already authorized your application, no DM is sent and the callback (if provided) fires immediately.
+
+Request body (optional):
+{
+  "callbackUrl": "https://example.com/rover/consent"
+}
+If you provide a callbackUrl, RoVer will POST to it once the user authorizes (see Callbacks below). The URL must be https. The callback never fires on denial.
+
+The callback is entirely optional. Once a user has authorized, the regular GET /guilds/:guildId/discord-to-roblox/:userId lookup simply starts returning their account so if preferred, you can just call the lookup when you next need the data.
+
+Responses:
+201 Created — { "status": "pending" } — the request was created and the user was DMed.
+200 OK — { "status": "pending" } — a request was already pending; the callback URL was refreshed.
+200 OK — { "status": "already_authorized" } — consent already existed; the callback (if any) was fired.
+Potential error codes (non-exhaustive):
+bad_request
+member_not_in_guild — the target user is not a member of that guild.
+dm_unreachable — the user could not be DMed (they may have DMs disabled or share no server with RoVer). No request was created.
+bot_not_in_guild
+discord_error
+discord_rate_limit
+Callbacks
+When a callbackUrl is provided, RoVer POSTs the same body the GET /guilds/:guildId/discord-to-roblox/:userId lookup returns. If the user authorized while not yet verified, robloxId and cachedUsername are null — re-request the resource or use the lookup endpoint later to obtain them once they verify.
+
+{
+  "robloxId": 92658764,
+  "cachedUsername": "evaera",
+  "discordId": "113691352327389188",
+  "guildId": "425800792679645204"
+}
+Each callback request carries two headers:
+
+X-RoVer-Timestamp — the Unix time (seconds) the request was signed.
+X-RoVer-Signature — sha256= followed by an HMAC-SHA256 hex digest.
+To verify a callback, compute the SHA-256 hex digest of the API key you used to make the access request, then use that digest as the key for an HMAC-SHA256 over the string `${timestamp}.${rawBody}`. Compare the result against the X-RoVer-Signature value. Reject requests whose signature doesn't match or whose timestamp is too old.
+
+import crypto from "node:crypto"
+
+// `apiKey` is the key you made the request with; `rawBody` is the raw
+// request body as a Buffer (not parsed JSON).
+function isValidSignature(apiKey, headers, rawBody) {
+  // The secret is the SHA-256 hex digest of your API key.
+  const secret = crypto.createHash("sha256").update(apiKey).digest("hex")
+
+  // RoVer signs "{timestamp}.{rawBody}" with HMAC-SHA256.
+  const data = `${headers["x-rover-timestamp"]}.${rawBody}`
+  const expected =
+    "sha256=" + crypto.createHmac("sha256", secret).update(data).digest("hex")
+
+  return expected === headers["x-rover-signature"]
+}
+Callbacks are delivered on a best-effort basis (a single attempt). If your application misses our request, we do not attempt redelivery.
+
+§POST /guilds/:guildId/update/:userId
+This endpoint requires Update API access — retained by former RoVer Plus subscribers, or granted on request in the RoVer Support Discord.
+
+Causes a member in your server to be updated, as if they ran the /verify command themselves. This will update the user's roles and nickname.
+
+Sample 200 response:
+{
+  "actions": {
+    "canManageRoles": true,
+    "canManageNicknames": true
+  },
+  "roles": [
+    "425802533584240650",
+    "603045395127468042",
+    "603048177435934734",
+    "603048265356935187",
+    "603048153922666556",
+    "603048114986942494"
+  ],
+  "unmanageableBoundRoles": [],
+  "addedRoles": ["442427935646230561", "793564623056442421"],
+  "removedRoles": ["793644242564623051"],
+  "failedRoles": ["564623561042427934"]
+}
+Potential error codes (non-exhaustive):
+bad_request
+user_not_found
+discord_error
+discord_rate_limit
+user_is_bot
+cannot_manage_user
+cannot_manage_owner
+§DELETE /api-key
+Revokes the API key that as used to send this request. This essentially causes an API key to self-destruct: further requests with this API key will fail.
+
+§GET /api/guilds/:guildId/bans
+List Roblox bans in the guild.
+
+This resource is paginated: up to 1000 results are returned per page. to access the next page, check the Link header in the response. The Link header is not present when there are no more results. Note that the contents are a relative URL.
+
+Link: </api/guilds/732729874222293299/bans?cursor=abcdefghijkl>; rel="next"
+Sample response:
+[
+  {
+    "robloxId": 901208622,
+    "reason": "This is the ban reason",
+    "discordId": "555729874222293299",
+    "createdAt": "2023-03-03T16:14:22.386Z"
+  },
+  {
+    "robloxId": 1469044,
+    "reason": "This is another ban reason",
+    "createdAt": "2024-04-19T13:15:43.810Z"
+  }
+]
+§GET /api/guilds/:guildId/bans/:robloxId
+Retrieves a single Roblox ban.
+
+Sample response:
+{
+  "createdAt": "2023-03-03T16:14:22.386Z",
+  "discordIds": ["555729874222293299"],
+  "reason": "This is the ban reason",
+  "robloxId": 901208622
+}
+§DELETE /api/guilds/:guildId/bans/:robloxId
+Unbans a Roblox account from your server.
+
+Successful deletions respond with 204 No Content.
+
+§PUT /api/guilds/:guildId/bans/:robloxId
+Bans a Roblox account from your server. Does not currently accept any parameters or request body.
+
+Successes respond with 201 Created.
+
+
+© 2026 Imaginary Menagerie, LLC.
+attributions
+Team members
+Support Discord server
+Add RoVer to your server
+Bot Developer API
+Terms of Service
+Privacy Policy
+Verify your Roblox account

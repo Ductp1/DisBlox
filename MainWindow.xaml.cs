@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml;
+using DisBlox.Services;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -21,7 +22,10 @@ public sealed partial class MainWindow : Window
 
         AppWindow.SetIcon("Assets/AppIcon.ico");
 
-        // Navigate the root frame to the main page on startup.
-        RootFrame.Navigate(typeof(MainPage));
+        var credentialStore = new WindowsCredentialStore();
+        var hasAnyApiKey = !string.IsNullOrEmpty(credentialStore.Get(CredentialKeys.RoverApiKey))
+            || !string.IsNullOrEmpty(credentialStore.Get(CredentialKeys.BloxLinkApiKey));
+
+        RootFrame.Navigate(hasAnyApiKey ? typeof(MainPage) : typeof(SetupPage));
     }
 }

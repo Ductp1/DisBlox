@@ -1,0 +1,88 @@
+erver API Documentation
+
+The Server API allows you to make requests for Roblox accounts from people in your Discord server. The Bloxlink Bot must be in your Discord server for these endpoints to work.
+
+Perform a lookup for the Discord user and resolve their Roblox ID. This user must be in your Discord server.
+
+GET
+
+https://api.blox.link/v4/public/guilds/:serverID/discord-to-roblox/:userID
+
+Example
+
+
+JavaScript
+
+Python
+
+Curl
+
+fetch("https://api.blox.link/v4/public/guilds/789699000047370261/discord-to-roblox/214858075650260992", { headers: { "Authorization": "key" } })
+	.then((response) => response.json())
+	.then((data) => console.log(data));
+Response
+
+
+200
+
+404
+
+{
+	"robloxID": "146941966"
+}
+Performs a reverse lookup in your Discord server for the Roblox user and resolves the Discord ID(s) linked with that Roblox account. All Discord IDs returned are users in your Discord server.
+
+GET
+
+https://api.blox.link/v4/public/guilds/:serverID/roblox-to-discord/:robloxID
+
+Example
+
+
+JavaScript
+
+Python
+
+Curl
+
+fetch("https://api.blox.link/v4/public/guilds/789699000047370261/roblox-to-discord/146941966", { headers: { "Authorization": "key" } })
+	.then((response) => response.json())
+	.then((data) => console.log(data));
+Response
+
+
+200
+
+{
+	"discordIDs": ["214858075650260992"]
+}
+Programmatically update a Discord user. This is the equivalent as if the user ran /verify in your server.
+
+POST
+
+https://api.blox.link/v4/public/guilds/:serverID/update-user/:userID
+
+Example
+
+
+JavaScript
+
+Python
+
+Curl
+
+fetch("https://api.blox.link/v4/public/guilds/789699000047370261/update-user/214858075650260992", { method: "POST", headers: { "Authorization": "key" } })
+	.then((response) => response.json())
+	.then((data) => console.log(data));
+Response
+
+
+200
+
+404
+
+{
+	"addedRoles": ["Recruit", "Verified"],
+	"removedRoles": ["Unverified"],
+	"nickname": "Roblox",
+}
